@@ -2072,13 +2072,15 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
         # because the shape of the new embedding layer is used across various modeling files
         # as well as to update config vocab size. Shape will be 0 when using DeepSpeed init leading
         # to errors when training.
-        new_embeddings = nn.Embedding(
+    
+        embeddings_type = type(old_embeddings)
+        new_embeddings = embeddings_type(
             new_num_tokens,
             old_embedding_dim,
             device=old_embeddings.weight.device,
             dtype=old_embeddings.weight.dtype,
         )
-
+        
         # initialize all new embeddings (in particular added tokens)
         self._init_weights(new_embeddings)
 
@@ -2095,7 +2097,6 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin, PushToHubMix
                 new_embeddings.weight.data[:n, :] = old_embeddings.weight.data[:n, :]
         else:
             new_embeddings.weight.data[:n, :] = old_embeddings.weight.data[:n, :]
-
         return new_embeddings
 
     def _get_resized_lm_head(
